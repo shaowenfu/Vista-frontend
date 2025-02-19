@@ -1,109 +1,119 @@
-# VISTA - 视觉辅助应用
+# VISTA - Visual Assistance App
 
-VISTA是一个基于Flutter开发的视觉辅助应用，旨在帮助视障人士更好地感知和理解周围环境。
+<div align="center">
 
-## 功能特点
+[![Flutter Version](https://img.shields.io/badge/Flutter-%3E%3D3.2.3-blue.svg)](https://flutter.dev/)
+[![Dart Version](https://img.shields.io/badge/Dart-%3E%3D3.2.3-blue.svg)](https://dart.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-- **场景理解**：实时分析和描述周围环境
-- **文字识别**：识别并朗读文本内容
-- **物体检测**：检测和识别周围物体
-- **无障碍设计**：完整的语音反馈和触觉反馈支持
+[English](README.md) | [简体中文](README_zh.md)
 
-## 项目结构
+VISTA is a Flutter-based visual assistance application designed to help visually impaired individuals better perceive and understand their surroundings.
+
+</div>
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔍 Scene Understanding | Real-time analysis and description of surroundings |
+| 📝 Text Recognition | Detect and read text content aloud |
+| 🎯 Object Detection | Identify and locate objects in the environment |
+| ♿ Accessibility | Complete voice feedback and haptic support |
+
+## 🏗️ Project Structure
 
 ```plaintext
 lib/
-├── app/                    # 应用核心配置
-│   ├── app.dart           # 应用入口组件
-│   └── routes.dart        # 路由配置
-├── core/                   # 核心功能模块
-│   ├── camera/            # 相机控制
-│   ├── voice/             # 语音交互
-│   └── haptic/            # 触觉反馈
-├── features/              # 功能模块
-│   ├── home/             # 主页
-│   ├── scene/            # 场景理解
-│   ├── ocr/              # 文字识别
-│   └── object/           # 物体检测
-├── shared/               # 共享资源
-│   ├── widgets/          # 共享组件
-│   ├── utils/            # 工具函数
-│   └── constants.dart    # 常量定义
-└── data/                 # 数据层
-    ├── api_client.dart   # API客户端
-    └── local_storage.dart # 本地存储
+├── app/                    # Core app configuration
+│   ├── app.dart           # App entry component
+│   └── routes.dart        # Route configuration
+├── core/                  # Core functionality modules
+├── features/             # Feature modules
+├── shared/              # Shared resources
+└── data/                # Data layer
 ```
 
-## 开发环境要求
+## 🚀 Getting Started
+
+### Prerequisites
 
 - Flutter SDK: >=3.2.3 <4.0.0
 - Dart SDK: >=3.2.3 <4.0.0
 - Android Studio / VS Code
-- Android SDK / Xcode (用于部署)
+- Android SDK / Xcode (for deployment)
 
-## 安装步骤
+### Installation
 
-1. 克隆项目
+1. Clone the repository
 ```bash
 git clone https://github.com/yourusername/vista_frontend.git
 ```
 
-2. 安装依赖
+2. Install dependencies
 ```bash
 cd vista_frontend
 flutter pub get
 ```
 
-3. 运行应用
+3. Run the app
 ```bash
 flutter run
 ```
 
-## 主要依赖
+## 📦 Dependencies
 
-- **camera**: 相机控制
-- **flutter_tts**: 语音合成
-- **speech_to_text**: 语音识别
-- **vibration**: 触觉反馈
-- **provider**: 状态管理
-- **http**: 网络请求
-- **shared_preferences**: 本地存储
+| Package | Purpose |
+|---------|---------|
+| camera | Camera control |
+| flutter_tts | Text-to-speech |
+| speech_to_text | Speech recognition |
+| vibration | Haptic feedback |
+| provider | State management |
 
-## 开发规范
+## 🎯 Accessibility Features
 
-- 使用中文注释说明代码功能
-- 遵循Flutter官方代码规范
-- 所有UI组件必须支持无障碍访问
-- 错误处理必须包含适当的用户反馈
+- Voice prompts for all buttons and controls
+- System TalkBack/VoiceOver support
+- Haptic feedback
+- Large text and high contrast support
 
-## 无障碍支持
+## 📝 Development Guidelines
 
-- 所有按钮和控件都提供语音提示
-- 支持系统TalkBack/VoiceOver
-- 提供触觉反馈
-- 支持大字体和高对比度
+- Follow Flutter official coding standards
+- All UI components must be accessibility-compliant
+- Error handling must include appropriate user feedback
 
-## 待实现功能
+## 🗺️ Roadmap
 
-- [ ] 设置页面
-- [ ] 用户偏好保存
-- [ ] 离线模式支持
-- [ ] 多语言支持
-- [ ] 性能优化
+- [ ] Settings page
+- [ ] User preferences storage
+- [ ] Offline mode support
+- [ ] Multi-language support
+- [ ] Performance optimization
 
-## 贡献指南
+## 🤝 Contributing
 
-1. Fork项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建Pull Request
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
 
-## 许可证
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-[MIT License](LICENSE)
+## 📄 License
 
-## 联系方式
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- 项目维护者：[Your Name]
-- 邮箱：[your.email@example.com]
+## 📮 Contact
+
+- Maintainer: Sherwen Fu
+- Email:shaowenfu.pg@gmail.com
+
+## 🙏 Acknowledgments
+
+- Flutter Team
+- Contributors
+- Open source community

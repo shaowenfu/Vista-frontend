@@ -1,121 +1,109 @@
-# VISTA - Visual Intelligence Support & Technical Assistant for BLV
-# VISTA - 视觉智能辅助系统（面向视障群体）
+# VISTA - 视觉辅助应用
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+VISTA是一个基于Flutter开发的视觉辅助应用，旨在帮助视障人士更好地感知和理解周围环境。
 
-[English](#english) | [中文](#中文)
+## 功能特点
 
-<h2 id="english">English</h2>
+- **场景理解**：实时分析和描述周围环境
+- **文字识别**：识别并朗读文本内容
+- **物体检测**：检测和识别周围物体
+- **无障碍设计**：完整的语音反馈和触觉反馈支持
 
-## Overview
-VISTA is an open-source assistive technology project specifically designed for Blind and Low Vision (BLV) people, helping them better perceive and interact with their environment through multimodal AI technologies.
+## 项目结构
 
-### Related Repositories
-- [Vista-frontend](https://github.com/yourusername/Vista-frontend) - Flutter mobile application
-- [Vista-backend](https://github.com/yourusername/Vista-backend) - FastAPI backend server
-
-### Key Features
-- Scene understanding and description
-- Text recognition and reading
-- Object detection and identification
-- Voice-based interaction
-
-### Tech Stack
-- Frontend: Flutter
-- Backend: FastAPI
-- AI Services: GPT-4V, YOLO, Whisper, Edge TTS
-
-### Project Structure
-```
-Vista-frontend/                # Flutter mobile application
-├── docs/                    # Documentation
-│   ├── architecture.md      # Frontend architecture
-│   └── mvp_plan.md         # MVP development plan
-├── lib/                     # Flutter source code
-│   ├── api/                # API client
-│   ├── models/             # Data models
-│   ├── screens/            # UI screens
-│   ├── services/           # Business logic
-│   └── widgets/            # Reusable widgets
-└── README.md               # Project documentation
-
-Vista-backend/                # FastAPI backend server
-├── docs/                   # Documentation
-│   └── api.md             # API documentation
-├── app/                    # Application code
-│   ├── api/               # API endpoints
-│   ├── core/              # Core functionality
-│   ├── models/            # Data models
-│   └── services/          # Business services
-├── tests/                 # Test cases
-└── README.md              # Project documentation
+```plaintext
+lib/
+├── app/                    # 应用核心配置
+│   ├── app.dart           # 应用入口组件
+│   └── routes.dart        # 路由配置
+├── core/                   # 核心功能模块
+│   ├── camera/            # 相机控制
+│   ├── voice/             # 语音交互
+│   └── haptic/            # 触觉反馈
+├── features/              # 功能模块
+│   ├── home/             # 主页
+│   ├── scene/            # 场景理解
+│   ├── ocr/              # 文字识别
+│   └── object/           # 物体检测
+├── shared/               # 共享资源
+│   ├── widgets/          # 共享组件
+│   ├── utils/            # 工具函数
+│   └── constants.dart    # 常量定义
+└── data/                 # 数据层
+    ├── api_client.dart   # API客户端
+    └── local_storage.dart # 本地存储
 ```
 
-### Quick Links
-- [Frontend Documentation](https://github.com/yourusername/Vista-frontend)
-- [Backend Documentation](https://github.com/yourusername/Vista-backend)
-- [API Documentation](https://github.com/yourusername/Vista-backend/docs/api.md)
+## 开发环境要求
 
-### Contributing
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting PRs.
+- Flutter SDK: >=3.2.3 <4.0.0
+- Dart SDK: >=3.2.3 <4.0.0
+- Android Studio / VS Code
+- Android SDK / Xcode (用于部署)
 
-### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 安装步骤
 
-<h2 id="中文">中文</h2>
-
-## 项目概述
-VISTA是一个专门面向视障群体(BLV)的开源辅助技术项目，通过多模态AI技术帮助视障人士更好地感知和理解周围环境。
-
-### 相关仓库
-- [Vista-frontend](https://github.com/yourusername/Vista-frontend) - Flutter移动应用
-- [Vista-backend](https://github.com/yourusername/Vista-backend) - FastAPI后端服务
-
-### 核心功能
-- 场景理解与描述
-- 文字识别与朗读
-- 物体检测与识别
-- 语音交互界面
-
-### 技术栈
-- 前端：Flutter
-- 后端：FastAPI
-- AI服务：GPT-4V、YOLO、Whisper、Edge TTS
-
-### 项目结构
-```
-Vista-frontend/                # Flutter移动应用
-├── docs/                    # 文档
-│   ├── architecture.md      # 前端架构
-│   └── mvp_plan.md         # MVP开发计划
-├── lib/                     # Flutter源代码
-│   ├── api/                # API客户端
-│   ├── models/             # 数据模型
-│   ├── screens/            # 界面
-│   ├── services/           # 业务逻辑
-│   └── widgets/            # 可复用组件
-└── README.md               # 项目文档
-
-Vista-backend/                # FastAPI后端服务
-├── docs/                   # 文档
-│   └── api.md             # API文档
-├── app/                    # 应用代码
-│   ├── api/               # API端点
-│   ├── core/              # 核心功能
-│   ├── models/            # 数据模型
-│   └── services/          # 业务服务
-├── tests/                 # 测试用例
-└── README.md              # 项目文档
+1. 克隆项目
+```bash
+git clone https://github.com/yourusername/vista_frontend.git
 ```
 
-### 快速链接
-- [前端文档](https://github.com/yourusername/Vista-frontend)
-- [后端文档](https://github.com/yourusername/Vista-backend)
-- [API文档](https://github.com/yourusername/Vista-backend/docs/api.md)
+2. 安装依赖
+```bash
+cd vista_frontend
+flutter pub get
+```
 
-### 贡献指南
-我们欢迎各种形式的贡献！提交PR前请阅读[贡献指南](CONTRIBUTING.md)。
+3. 运行应用
+```bash
+flutter run
+```
 
-### 开源协议
-本项目采用MIT协议 - 详见[LICENSE](LICENSE)文件。
+## 主要依赖
+
+- **camera**: 相机控制
+- **flutter_tts**: 语音合成
+- **speech_to_text**: 语音识别
+- **vibration**: 触觉反馈
+- **provider**: 状态管理
+- **http**: 网络请求
+- **shared_preferences**: 本地存储
+
+## 开发规范
+
+- 使用中文注释说明代码功能
+- 遵循Flutter官方代码规范
+- 所有UI组件必须支持无障碍访问
+- 错误处理必须包含适当的用户反馈
+
+## 无障碍支持
+
+- 所有按钮和控件都提供语音提示
+- 支持系统TalkBack/VoiceOver
+- 提供触觉反馈
+- 支持大字体和高对比度
+
+## 待实现功能
+
+- [ ] 设置页面
+- [ ] 用户偏好保存
+- [ ] 离线模式支持
+- [ ] 多语言支持
+- [ ] 性能优化
+
+## 贡献指南
+
+1. Fork项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建Pull Request
+
+## 许可证
+
+[MIT License](LICENSE)
+
+## 联系方式
+
+- 项目维护者：[Your Name]
+- 邮箱：[your.email@example.com]

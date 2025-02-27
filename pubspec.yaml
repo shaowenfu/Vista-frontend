@@ -27,6 +27,7 @@ dependencies:
   speech_to_text: ^6.3.0
   # 触觉反馈
   vibration: ^1.8.1
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:

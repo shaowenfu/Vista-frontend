@@ -1,112 +1,122 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import '../../../core/camera/camera_controller.dart';
+import 'dart:typed_data';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/communication/api_client.dart';
 
-/// 场景分析结果模型
+/// 场景分析服务提供者
+/// 负责创建和管理场景分析服务实例
+final sceneAnalysisServiceProvider = Provider<SceneAnalysisService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return SceneAnalysisService(apiClient);
+});
+
+/// 场景分析服务
+/// 负责处理场景分析相关的业务逻辑
+class SceneAnalysisService {
+  final ApiClient _apiClient;
+  
+  SceneAnalysisService(this._apiClient);
+  
+  /// 分析场景
+  /// 发送图像数据到后端进行场景分析
+  Future<SceneAnalysisResult> analyzeScene(Uint8List imageBytes) async {
+    try {
+      final response = await _apiClient.analyzeScene(imageBytes);
+      return SceneAnalysisResult.fromJson(response);
+    } catch (e) {
+      return SceneAnalysisResult(
+        description: '场景分析失败: $e',
+        confidence: 0.0,
+        objects: [],
+        error: true,
+      );
+    }
+  }
+}
+
+/// 场景分析结果
+/// 包含场景分析的结果信息
 class SceneAnalysisResult {
-  /// 场景的整体描述
   final String description;
-  
-  /// 场景中识别到的主要物体
-  final List<DetectedObject> objects;
-  
-  /// 场景的空间关系描述
-  final String spatialRelations;
-  
-  /// 分析时间戳
-  final DateTime timestamp;
-
-  const SceneAnalysisResult({
-    required this.description,
-    required this.objects,
-    required this.spatialRelations,
-    required this.timestamp,
-  });
-}
-
-/// 检测到的物体模型
-class DetectedObject {
-  /// 物体类别
-  final String category;
-  
-  /// 物体在图像中的位置 (相对坐标 0.0-1.0)
-  final Rect location;
-  
-  /// 置信度 (0.0-1.0)
   final double confidence;
+  final List<DetectedObject> objects;
+  final bool error;
   
-  /// 详细描述
-  final String? description;
-
-  const DetectedObject({
-    required this.category,
-    required this.location,
+  SceneAnalysisResult({
+    required this.description,
     required this.confidence,
-    this.description,
+    required this.objects,
+    this.error = false,
   });
+  
+  /// 从JSON创建场景分析结果
+  factory SceneAnalysisResult.fromJson(Map<String, dynamic> json) {
+    if (json.containsKey('error')) {
+      return SceneAnalysisResult(
+        description: json['error'],
+        confidence: 0.0,
+        objects: [],
+        error: true,
+      );
+    }
+    
+    final List<dynamic> objectsJson = json['objects'] ?? [];
+    final List<DetectedObject> objects = objectsJson
+        .map((obj) => DetectedObject.fromJson(obj))
+        .toList();
+    
+    return SceneAnalysisResult(
+      description: json['description'] ?? '无法识别场景',
+      confidence: (json['confidence'] ?? 0.0).toDouble(),
+      objects: objects,
+    );
+  }
 }
 
-/// 场景分析服务接口
-/// 负责处理场景理解的核心业务逻辑
-abstract class SceneAnalysisService {
-  /// 初始化服务
-  Future<void> initialize();
-
-  /// 开始实时场景分析
-  /// 返回场景分析结果流
-  Stream<SceneAnalysisResult> startRealtimeAnalysis();
-
-  /// 停止实时场景分析
-  Future<void> stopRealtimeAnalysis();
-
-  /// 分析单帧图像
-  /// [frame] 要分析的相机帧
-  Future<SceneAnalysisResult> analyzeSingleFrame(CameraFrame frame);
-
-  /// 获取当前分析状态
-  SceneAnalysisState get currentState;
-
-  /// 释放资源
-  Future<void> dispose();
-}
-
-/// 场景分析状态
-enum SceneAnalysisState {
-  /// 未初始化
-  uninitialized,
+/// 检测到的物体
+/// 包含物体的类型、位置和置信度
+class DetectedObject {
+  final String label;
+  final double confidence;
+  final BoundingBox boundingBox;
   
-  /// 准备就绪
-  ready,
-  
-  /// 正在分析
-  analyzing,
-  
-  /// 分析完成
-  completed,
-  
-  /// 发生错误
-  error,
-}
-
-/// 场景分析配置选项
-class SceneAnalysisOptions {
-  /// 是否启用物体检测
-  final bool enableObjectDetection;
-  
-  /// 是否启用空间关系分析
-  final bool enableSpatialAnalysis;
-  
-  /// 最小物体检测置信度阈值 (0.0-1.0)
-  final double minConfidence;
-  
-  /// 分析结果语言
-  final String language;
-
-  const SceneAnalysisOptions({
-    this.enableObjectDetection = true,
-    this.enableSpatialAnalysis = true,
-    this.minConfidence = 0.5,
-    this.language = 'zh-CN',
+  DetectedObject({
+    required this.label,
+    required this.confidence,
+    required this.boundingBox,
   });
+  
+  /// 从JSON创建检测到的物体
+  factory DetectedObject.fromJson(Map<String, dynamic> json) {
+    return DetectedObject(
+      label: json['label'] ?? '未知物体',
+      confidence: (json['confidence'] ?? 0.0).toDouble(),
+      boundingBox: BoundingBox.fromJson(json['bounding_box'] ?? {}),
+    );
+  }
+}
+
+/// 边界框
+/// 包含物体在图像中的位置信息
+class BoundingBox {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  
+  BoundingBox({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+  
+  /// 从JSON创建边界框
+  factory BoundingBox.fromJson(Map<String, dynamic> json) {
+    return BoundingBox(
+      x: (json['x'] ?? 0.0).toDouble(),
+      y: (json['y'] ?? 0.0).toDouble(),
+      width: (json['width'] ?? 0.0).toDouble(),
+      height: (json['height'] ?? 0.0).toDouble(),
+    );
+  }
 }

@@ -1,9 +1,30 @@
-以下是针对VISTA项目前端的模块化开发、面向对象设计（OOD）和领域驱动设计（DDD）的详细实施方案，与后端架构深度协同：
+# VISTA 前端设计文档
+
+本设计文档针对 VISTA 项目前端进行了全面重构，以满足 BLV（盲人或低视力）人群的使用需求。我们遵循“尽可能降低 BLV 人群的使用门槛”的开发原则，重新定义了模块化架构、交互方式和实现步骤。
 
 ---
 
-### **一、前端模块化开发**
-#### **1. 模块划分与职责**
+## **一、核心开发原则**
+1. **无障碍优先**:
+   - 用户与应用的主要交互方式为语音指令和触觉反馈。
+   - 避免依赖视觉界面，确保所有功能均可通过语音或无障碍技术完成。
+
+2. **单一页面设计**:
+   - 应用仅包含一个页面：相机页面。
+   - 用户打开应用后，直接进入相机模式，无需额外导航。
+
+3. **语音驱动功能切换**:
+   - 用户通过语音指令切换功能（如场景理解、文字识别、物体检测）。
+   - 提供清晰的语音反馈，告知用户当前状态和操作结果。
+
+4. **触觉反馈增强体验**:
+   - 使用震动反馈确认用户操作，提升交互的直观性。
+
+---
+
+## **二、模块化开发**
+
+### **1. 模块划分与职责**
 ```plaintext
 1. **核心功能模块**
    - CameraModule: 相机控制与帧捕获
@@ -15,221 +36,93 @@
    - OCRService: 文字识别与格式化
    - ObjectDetectionService: 物体检测与描述生成
 
-3. **状态管理模块**
-   - AppState: 全局状态（网络、设备权限等）
-   - UserPreference: 用户配置与个性化设置
-   - TaskQueue: 异步任务队列管理
+3. **视频流处理模块**
+   这个是前端的重要创新点--关键帧提取技术
+   为了减轻通信压力和后端负担，前端需要处理视频流，并进行必要的预处理和压缩，以确保视频流的质量和传输效率。最重要的是，根据任务的不同，前端需要对视频流进行不同的处理，以确保任务的准确性和效率。
+   比如：
+   - 场景理解：需要对视频流进行压缩和编码，以确保视频流的质量和传输效率。
+   - 文字识别：需要提取关键帧，然后只发送关键帧，以确保文字识别的准确性和效率。
+   - 物体检测：需要提取关键帧，然后只发送关键帧，以确保物体检测的准确性和效率。
 
-4. **UI组件模块**
-   - BaseWidgets: 可复用基础组件（按钮、卡片等）
-   - AccessibilityWidgets: 无障碍交互组件（语音输入框、震动反馈按钮）
-   - ScenarioTemplates: 场景化页面模板（导航模式、阅读模式）
-```
 
-#### **2. 模块接口定义**
-```dart
-// 相机模块抽象
-abstract class CameraController {
-  Future<void> initialize();
-  Stream<CameraFrame> get frameStream;
-  Future<Uint8List> captureStillImage();
-}
-
-// 语音模块接口
-abstract class VoiceInteraction {
-  Future<String> recognizeSpeech();
-  Future<void> synthesizeText(String text);
-}
-
-// 依赖注入配置
-final cameraModule = Provider<CameraController>((ref) => FlutterCamera());
-final voiceModule = Provider<VoiceInteraction>((ref) => EdgeTTSAdapter());
+4. **无障碍交互模块**
+   - VoiceInteractionManager: 管理语音指令解析与响应
+   - HapticFeedbackManager: 管理触觉反馈逻辑
 ```
 
 ---
 
-### **二、可操作编码步骤**
+## **三、可操作编码步骤**
 
-#### **1、项目目录结构**
+### **1. 项目目录结构**
 
-```plaintext
-vista_frontend/
-├── lib/
-│ ├── main.dart # 应用入口
-│ ├── app/
-│ │ ├── app.dart # 应用初始化
-│ │ └── routes.dart # 路由配置
-│ ├── features/ # 核心功能模块
-│ │ ├── scene/ # 场景理解功能
-│ │ ├── ocr/ # 文字识别功能
-│ │ └── object/ # 物体检测功能
-│ ├── core/ # 共享核心功能
-│ │ ├── camera/ # 相机控制
-│ │ ├── voice/ # 语音交互
-│ │ └── haptic/ # 触觉反馈
-│ ├── shared/ # 共享资源
-│ │ ├── widgets/ # 通用组件
-│ │ ├── utils/ # 工具函数
-│ │ └── constants.dart # 常量定义
-│ └── data/ # 数据层
-│ ├── api_client.dart # API客户端
-│ └── local_storage.dart # 本地存储
-├── assets/ # 静态资源
-└── test/ # 测试文件
-```
+---
 
-以下是对每个部分的详细说明：
+### **2. 功能模块说明**
 
 #### **1. `lib/` 目录**
 
-- **`main.dart`**: 
+- **`main.dart`**:
   - **内容**: 应用的入口文件。
-  - **作用**: 初始化应用，设置根部件，并启动应用。
+  - **作用**: 初始化应用，启动无障碍友好的相机页面。
 
 - **`app/` 目录**:
-  - **`app.dart`**: 
+  - **`app.dart`**:
     - **内容**: 应用的初始化逻辑。
-    - **作用**: 配置应用的全局设置，如主题、依赖注入等。
-  - **`routes.dart`**: 
-    - **内容**: 路由配置。
-    - **作用**: 定义应用中各个页面的路由路径和导航逻辑。
-
-- **`features/` 目录**:
-  - **`scene/` 目录**: 
-    - **`screens/`**: 
-      - **内容**: 场景理解相关的UI页面。
-      - **作用**: 展示场景理解的结果和交互界面。
-    - **`services/`**: 
-      - **内容**: 场景理解的业务逻辑和服务。
-      - **作用**: 处理场景理解的核心逻辑，如调用AI服务。
-    - **`widgets/`**: 
-      - **内容**: 场景理解相关的UI组件。
-      - **作用**: 提供可复用的UI组件，如场景描述卡片。
-  - **`ocr/` 目录**: 
-    - **内容**: 文字识别功能的实现。
-    - **作用**: 包含OCR相关的页面、服务和组件。
-  - **`object/` 目录**: 
-    - **内容**: 物体检测功能的实现。
-    - **作用**: 包含物体检测相关的页面、服务和组件。
+    - **作用**: 配置全局无障碍支持、语音模块和触觉反馈模块。
+  - **`routes.dart`**:
+    - **内容**: 简化的路由配置，仅支持单页面（相机页面）。
 
 - **`core/` 目录**:
-  - **`camera/`**: 
-    - **内容**: 相机控制逻辑。
-    - **作用**: 提供相机的初始化、帧捕获等功能。
-  - **`voice/`**: 
-    - **内容**: 语音交互逻辑。
-    - **作用**: 实现语音识别和合成功能。
-  - **`haptic/`**: 
-    - **内容**: 触觉反馈逻辑。
-    - **作用**: 提供震动反馈的实现。
+  - 内容：功能模块
 
-- **`shared/` 目录**:
-  - **`widgets/`**: 
-    - **内容**: 通用UI组件。
-    - **作用**: 提供应用中可复用的基础组件，如按钮、输入框。
-  - **`utils/`**: 
-    - **内容**: 工具函数。
-    - **作用**: 提供辅助功能，如格式化、转换等。
-  - **`constants.dart`**: 
-    - **内容**: 应用中的常量定义。
-    - **作用**: 集中管理应用中使用的常量值。
 
-- **`data/` 目录**:
-  - **`api_client.dart`**: 
-    - **内容**: API客户端逻辑。
-    - **作用**: 封装与后端通信的逻辑，支持HTTP请求和WebSocket。
-  - **`local_storage.dart`**: 
-    - **内容**: 本地存储逻辑。
-    - **作用**: 实现数据的缓存和持久化，如使用SQLite或SharedPreferences。
+- **`communication/` 目录**:
+  - **`api_client.dart`**:
+    - **内容**: API 客户端逻辑。
+    - **作用**: 封装与后端通信的逻辑，支持 HTTP 请求和 WebSocket。
+
+
+- **`local_storage.dart`**:
+  - **内容**: 本地存储逻辑。
+  - **作用**: 实现数据的缓存和持久化。
 
 #### **2. `assets/` 目录**
-
 - **内容**: 静态资源，如图片、图标。
 - **作用**: 存放应用中使用的所有静态文件。
 
 #### **3. `test/` 目录**
-
 - **内容**: 测试文件。
 - **作用**: 包含应用的单元测试和集成测试，确保代码的正确性和稳定性。
 
 ---
 
-#### **2. 实现核心功能模块**
+## **四、功能实现细节**
+
+- **页面描述**:
+  - 用户打开应用后，直接进入相机页面。
+  - 页面无视觉 UI，仅通过语音指令和触觉反馈与用户交互。
+
+- **交互流程**:所有用户交互行为通过VoiceInteractionManager完成，无需视觉界面
+  1. 用户打开应用，自动启动相机。
+  2. 用户发出语音指令（如“分析场景”、“识别文字”、“检测物体”）。
+  3. 应用通过语音反馈告知用户当前操作状态和结果。
+  4. 提供触觉反馈确认操作完成。
+
+## **五、前后端协同设计**
+
+### **通信协议封装**
 ```dart
-// CameraModule实现
-class FlutterCamera implements CameraController {
-  late CameraController _controller;
-  
-  @override
-  Future<void> initialize() async {
-    final cameras = await availableCameras();
-    _controller = CameraController(cameras[0], ResolutionPreset.max);
-    await _controller.initialize();
-  }
-
-  @override
-  Stream<CameraFrame> get frameStream => _controller.buildPreviewStream()
-      .map((image) => CameraFrame(image, DateTime.now()));
-}
-
-// 领域服务：场景理解
-class SceneUnderstandingService {
-  final CameraController camera;
-  final ApiClient apiClient;
-
-  Stream<SceneDescription> analyzeRealtime() async* {
-    await for (final frame in camera.frameStream) {
-      final result = await apiClient.sendToGPT4V(frame);
-      yield SceneDescription.fromJson(result);
-    }
-  }
-}
-```
-
-#### **3. UI组件实现**
-```dart
-// 无障碍按钮组件
-class AccessibleButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  final HapticPattern? hapticPattern;
-
-  void _handlePress() {
-    if (hapticPattern != null) {
-      Vibration.execute(hapticPattern!);
-    }
-    onPressed();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handlePress,
-      child: Semantics(
-        button: true,
-        label: label,
-        child: Container(...),
-      ),
-    );
-  }
-}
-```
-
----
-
-### **三、前后端协同设计**
-#### **1. 通信协议封装**
-```dart
-// API客户端抽象层
+// API 客户端抽象层
 abstract class ApiClient {
   Future<SceneAnalysisResult> analyzeScene(CameraFrame frame);
   Future<OcrResult> recognizeText(Uint8List image);
 }
 
-// 实现类：WebSocket适配器
+// 示例实现
 class WebSocketClient implements ApiClient {
   final WebSocketChannel _channel;
-  
+
   @override
   Future<SceneAnalysisResult> analyzeScene(CameraFrame frame) async {
     _channel.sink.add(frame.toJson());
@@ -240,26 +133,7 @@ class WebSocketClient implements ApiClient {
 }
 ```
 
-#### **2. 状态同步机制**
-```dart
-// 全局状态管理（使用Riverpod）
-final sceneStateProvider = StateNotifierProvider<SceneNotifier, SceneState>((ref) {
-  return SceneNotifier(ref.watch(apiClientProvider));
-});
+---
 
-class SceneNotifier extends StateNotifier<SceneState> {
-  final ApiClient _client;
-  
-  SceneNotifier(this._client) : super(SceneInitial());
-
-  Future<void> startAnalysis() async {
-    state = SceneLoading();
-    try {
-      final result = await _client.analyzeScene(currentFrame);
-      state = SceneSuccess(result);
-    } catch (e) {
-      state = SceneError(e.toString());
-    }
-  }
-}
-```
+## **六、总结**
+通过以上设计，我们实现了无障碍优先的前端架构，确保 BLV 人群能够轻松使用 VISTA 应用。所有功能均通过语音指令和触觉反馈完成，避免了对视觉界面的依赖。

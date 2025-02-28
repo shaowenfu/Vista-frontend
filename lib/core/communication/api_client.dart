@@ -22,6 +22,10 @@ abstract class ApiClient {
   /// 检测物体
   /// 发送图像数据到后端进行物体检测
   Future<Map<String, dynamic>> detectObjects(List<int> imageBytes);
+  
+  /// 语音识别
+  /// 发送录音数据到后端进行语音识别和指令解析
+  Future<Map<String, dynamic>> recognizeVoice(List<int> audioBytes);
 }
 
 /// HTTP API客户端实现
@@ -93,6 +97,28 @@ class HttpApiClient implements ApiClient {
       }
     } catch (e) {
       print('物体检测错误: $e');
+      return {'error': e.toString()};
+    }
+  }
+  
+  @override
+  Future<Map<String, dynamic>> recognizeVoice(List<int> audioBytes) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/voice/recognize'),
+        headers: {
+          'Content-Type': 'audio/wav', // 或其他适当的音频格式
+        },
+        body: audioBytes,
+      );
+      
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('语音识别失败: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('语音识别错误: $e');
       return {'error': e.toString()};
     }
   }

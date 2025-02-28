@@ -52,7 +52,7 @@
 
 ---
 
-## **三、可操作编码步骤**
+## **三、系统设计**
 
 ### **1. 项目目录结构**
 
@@ -75,8 +75,16 @@
 
 - **`core/` 目录**:
   - 内容：功能模块
-
-
+  - **`core/voice/` 目录**:
+    - **`voice_service.dart`**:
+      - **内容**: 语音合成服务实现。
+      - **作用**: 负责文本到语音的转换，提供自然的语音反馈。
+      - **核心功能**:
+        - 语音合成（TTS）
+        - 语音参数配置（语速、音量、音调等）
+        - 多语言支持
+        - 语音队列管理
+        
 - **`communication/` 目录**:
   - **`api_client.dart`**:
     - **内容**: API 客户端逻辑。
@@ -99,16 +107,140 @@
 
 ## **四、功能实现细节**
 
+## **四、功能实现细节**
+
 - **页面描述**:
   - 用户打开应用后，直接进入相机页面。
-  - 页面无视觉 UI，仅通过语音指令和触觉反馈与用户交互。
+  - 页面无视觉 UI，支持语音指令和触觉反馈交互。
+  - 新增长按录音功能区域
 
-- **交互流程**:所有用户交互行为通过VoiceInteractionManager完成，无需视觉界面
-  1. 用户打开应用，自动启动相机。
-  2. 用户发出语音指令（如“分析场景”、“识别文字”、“检测物体”）。
-  3. 应用通过语音反馈告知用户当前操作状态和结果。
-  4. 提供触觉反馈确认操作完成。
+- **交互流程**:
+  1. 基础交互:
+     - 用户打开应用，自动启动相机。
+     - 用户发出语音指令（如“分析场景”、“识别文字”、“检测物体”）。
+     - 应用通过语音反馈告知用户当前操作状态和结果。
+     - 提供触觉反馈确认操作完成。
+  
+  2. 长按录音交互:
+     - 用户长按屏幕任意位置超过3秒开始录音
+     - 触发振动反馈确认录音开始
+     - 用户松手时结束录音
+     - 录音文件自动上传至后端处理
+     - 后端返回处理结果后，通过语音播报反馈给用户
 
+### **录音交互实现**
+
+1. **触发条件**:
+   - 长按屏幕任意位置超过3秒
+   - 松手结束录音
+
+2. **实现细节**:
+   ```dart
+   GestureDetector(
+     onLongPressStart: (details) {
+       _startRecording();
+     },
+     onLongPressEnd: (details) {
+       _stopRecording();
+     },
+     child: Container(
+       // 全屏可触控区域
+     ),
+   )
+   
+   Future<void> _startRecording() async {
+     final tempDir = Directory.systemTemp;
+     final filePath = '${tempDir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+     await _audioRecorder.startRecorder(
+       toFile: filePath,
+       codec: Codec.aacADTS,
+     );
+   }
+   
+   Future<void> _stopRecording() async {
+     final result = await _audioRecorder.stopRecorder();
+     if (result != null) {
+       _sendAudioToBackend(result);
+     }
+   }
+   ···
+  
+
+3. **前后端交互**:
+   - 前端不再进行本地语音识别
+   - 录音文件直接发送到后端 `/api/voice/recognize`
+   - 后端返回识别结果和对应的操作指令
+
+### **音频处理实现**
+
+1. **技术选型**:
+   - 使用 `flutter_sound` 包实现音频录制和会话管理
+   - 使用 `flutter_tts` 包实现文本到语音的转换
+   
+2. **音频会话管理**:
+   ```dart
+   class AudioService {
+     final FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
+     
+     Future<void> initAudioSession() async {
+       await _audioRecorder.openRecorder();
+     }
+     
+     Future<void> closeAudioSession() async {
+       await _audioRecorder.closeRecorder();
+     }
+     
+     Future<void> startRecording(String filePath) async {
+       await _audioRecorder.startRecorder(
+         toFile: filePath,
+         codec: Codec.aacADTS,
+       );
+     }
+     
+     Future<void> stopRecording() async {
+       await _audioRecorder.stopRecorder();
+     }
+   }
+   ```
+
+3. **语音播报实现**:
+   - 支持 Android (TextToSpeech) 和 iOS (AVSpeechSynthesizer) 平台
+
+4. **核心功能**:
+   ```dart
+   class VoiceService {
+     final FlutterTts tts = FlutterTts();
+     
+     Future<void> initialize() async {
+       await tts.setLanguage('zh-CN');
+       await tts.setSpeechRate(1.0);
+       await tts.setVolume(1.0);
+       await tts.setPitch(1.0);
+     }
+     
+     Future<void> speak(String text) async {
+       await tts.speak(text);
+     }
+   }
+   ```
+5. **使用场景**:
+   - 场景分析结果播报
+   - 文字识别结果播报
+   - 物体检测结果播报
+   - 错误状态提示
+   - 操作确认反馈
+6. **优化策略:**
+   - 语音队列管理，避免语音重叠
+   - 智能中断机制，优先播报重要信息
+   - 根据场景动态调整语速
+   - 支持紧急打断当前播报
+7. **无障碍增强 :**
+   - 提供清晰的语音指令反馈
+   - 支持语音音量和语速的个性化设置
+   - 结合触觉反馈提供多感官体验
+   - 智能调整语音提示的详细程度
+
+    
 ## **五、前后端协同设计**
 
 ### **通信协议封装**

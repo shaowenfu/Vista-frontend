@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:logging/logging.dart';
 
 /// 语音合成提供者
 /// 负责文本到语音的转换
@@ -31,14 +32,15 @@ final sttProvider = Provider<SpeechToTextService>((ref) {
 class SpeechToTextService {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isInitialized = false;
+  final _logger = Logger('VoiceModule');
   
   /// 初始化语音识别
   Future<bool> initialize() async {
     if (_isInitialized) return true;
     
     _isInitialized = await _speech.initialize(
-      onError: (error) => print('语音识别错误: $error'),
-      onStatus: (status) => print('语音识别状态: $status'),
+      onError: (error) => _logger.warning('Speech recognition error: $error'), 
+      onStatus: (status) => _logger.info('Speech recognition status: $status')
     );
     
     return _isInitialized;
@@ -87,7 +89,7 @@ final voiceCommandProvider = Provider<VoiceCommandService>((ref) {
 
 /// 语音命令服务
 class VoiceCommandService {
-  final ProviderRef _ref;
+  final Ref _ref;
   
   VoiceCommandService(this._ref);
   

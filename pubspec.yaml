@@ -28,6 +28,8 @@ dependencies:
   # 触觉反馈
   vibration: ^1.8.1
   flutter_riverpod: ^2.6.1
+  logging: ^1.2.0
+  flutter_sound: ^9.23.1
 
 dev_dependencies:
   flutter_test:

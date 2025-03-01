@@ -1,5 +1,21 @@
 # VISTA Frontend Changelog
 
+## [0.1.0] - 2025-03-01
+### Added
+- Continuous Voice Listening
+  - Implemented background voice monitoring with wake word detection
+  - Added automatic voice activity detection with 2-second silence threshold
+  - Integrated Porcupine wake word engine for "Hey Vista" detection
+  - Created visual feedback system for different listening states
+  - Added toggle switch for enabling/disabling continuous listening
+  - Implemented HTTP audio upload to backend API
+
+### Changed
+- Audio Recording
+  - Modified recording flow to support both manual and automatic modes
+  - Added visual indicators for recording status
+  - Improved audio processing pipeline
+
 ## [0.1.0] - 2025-02-28
 ### Completed
 - Core Components

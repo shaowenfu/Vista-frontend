@@ -30,6 +30,12 @@ dependencies:
   flutter_riverpod: ^2.6.1
   logging: ^1.2.0
   flutter_sound: ^9.23.1
+  # 唤醒词检测
+  porcupine_flutter: ^3.0.1
+  # 文件路径管理
+  path_provider: ^2.1.1
+  # HTTP请求处理
+  http_parser: ^4.0.2
 
 dev_dependencies:
   flutter_test:
@@ -41,3 +47,4 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/wake_words/

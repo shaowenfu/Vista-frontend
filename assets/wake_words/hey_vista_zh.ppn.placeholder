@@ -1,0 +1,12 @@
+This is a placeholder file for the "Hey Vista" wake word model in Chinese.
+
+The actual wake word model file (hey_vista_zh.ppn) needs to be generated using the Picovoice Console (https://console.picovoice.ai/) and placed in this directory.
+
+Steps to generate the wake word model:
+1. Create an account on the Picovoice Console
+2. Obtain an access key
+3. Use the Porcupine wake word creator to generate a custom wake word model for "嘿，Vista" (Hey Vista)
+4. Download the generated .ppn file and place it in this directory
+5. Update the access key in the application code (lib/core/voice/continuous_voice_service.dart)
+
+Note: This placeholder file can be deleted once the actual wake word model file is generated and placed in this directory.

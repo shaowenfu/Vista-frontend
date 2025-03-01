@@ -75,8 +75,8 @@
 
 - **`core/` 目录**:
   - 内容：功能模块
-  - **`core/voice/` 目录**:
-    - **`voice_service.dart`**:
+- **`core/voice/` 目录**:
+    - **`voice_module.dart`**:
       - **内容**: 语音合成服务实现。
       - **作用**: 负责文本到语音的转换，提供自然的语音反馈。
       - **核心功能**:
@@ -84,6 +84,15 @@
         - 语音参数配置（语速、音量、音调等）
         - 多语言支持
         - 语音队列管理
+    - **`continuous_voice_service.dart`**:
+      - **内容**: 持续语音监听服务实现。
+      - **作用**: 负责后台持续监听用户语音，检测唤醒词并自动录音。
+      - **核心功能**:
+        - 唤醒词检测（使用Porcupine引擎）
+        - 语音活动检测（VAD）
+        - 自动录音与停止
+        - 录音文件处理与上传
+        - 状态管理与视觉反馈
         
 - **`communication/` 目录**:
   - **`api_client.dart`**:
@@ -103,9 +112,93 @@
 - **内容**: 测试文件。
 - **作用**: 包含应用的单元测试和集成测试，确保代码的正确性和稳定性。
 
----
+### **3.核心功能模块的调用流程
 
-## **四、功能实现细节**
+ <mcsymbol name="_CameraScreenState" filename="camera_screen.dart" path="e:\all_workspace\VISTA\vista_frontend\lib\camera_screen.dart" startline="37" type="class"></mcsymbol> 中各个核心功能模块是如何被调用的：
+
+## 1. 权限管理模块
+
+权限管理模块的调用流程：
+
+```
+initState() → _requestPermissions() → _checkAndRequestPermissions() / _checkAndRequestAudioPermissions()
+```
+
+- 在 `initState()` 中调用 `_requestPermissions()`，这是应用启动时的入口点
+- `_requestPermissions()` 会同时检查相机和音频权限
+- 如果权限未获取，会设置一个定时器每5秒重新检查权限
+
+## 2. 帧处理模块
+
+场景分析模块的调用流程：
+
+```
+_checkAndRequestPermissions() → _startFrameHadleTimer() → _analyzeCurrentFrame() → _analyzeScene()
+```
+
+- 当获取到相机权限后，`_checkAndRequestPermissions()` 会调用 `_startFrameHadleTimer()`
+- 定时器每3秒触发一次 `_analyzeCurrentFrame()`
+- 根据当前模式 `_currentMode`，调用相应的分析方法（目前只实现了 `_analyzeScene()`）
+- 分析成功后，通过触觉反馈模块提供反馈
+
+另外，帧处理模块还会在应用生命周期变化时被控制：
+- 当应用进入后台（`AppLifecycleState.paused`）时，停止分析
+- 当应用恢复前台（`AppLifecycleState.resumed`）时，重新开始分析
+
+## 3. 音频录制模块
+
+音频录制模块的调用流程：
+
+```
+initState() → _initAudioRecorder()
+```
+
+以及用户交互触发的流程：
+
+```
+GestureDetector.onLongPressStart → _longPressTimer → _startRecording()
+GestureDetector.onLongPressEnd → _stopRecording() → _sendAudioToBackend()
+```
+
+- 在 `initState()` 中初始化录音器
+- 用户长按屏幕3秒后，触发 `_startRecording()`
+- 用户松开长按时，触发 `_stopRecording()`，然后调用 `_sendAudioToBackend()`（目前是待实现的TODO）
+
+## 4. 资源清理模块
+
+资源清理在以下情况被调用：
+
+```
+dispose() → _stopAnalysisTimer() / _permissionTimer?.cancel() / _disposeAudioRecorder()
+```
+
+- 当组件被销毁时，`dispose()` 方法会被调用
+- 它会停止所有定时器、取消权限检查、关闭录音器
+
+## 5. 生命周期管理
+
+生命周期管理通过 `WidgetsBindingObserver` 实现：
+
+```
+didChangeAppLifecycleState() → 根据状态调用 _stopAnalysisTimer() / _startFrameHadleTimer() / _stopRecording()
+```
+
+- 当应用状态变化时，`didChangeAppLifecycleState()` 被系统调用
+- 根据不同状态执行相应操作，确保资源合理使用
+
+## 6. UI 渲染
+
+UI 渲染通过 `build()` 方法实现：
+
+```
+build() → GestureDetector → Scaffold → ref.watch(cameraControllerProvider).when()
+```
+
+- 使用 Riverpod 的 `ref.watch()` 监听相机控制器状态
+- 根据状态显示相机预览或加载/错误界面
+- 通过 `GestureDetector` 捕获用户长按手势
+
+---
 
 ## **四、功能实现细节**
 
@@ -131,8 +224,8 @@
 ### **录音交互实现**
 
 1. **触发条件**:
-   - 长按屏幕任意位置超过3秒
-   - 松手结束录音
+   - 手动模式：长按屏幕任意位置超过3秒，松手结束录音
+   - 自动模式：启用持续监听后，说出唤醒词"嘿，Vista"自动开始录音，静音2秒后自动结束录音
 
 2. **实现细节**:
    ```dart
@@ -176,6 +269,7 @@
 1. **技术选型**:
    - 使用 `flutter_sound` 包实现音频录制和会话管理
    - 使用 `flutter_tts` 包实现文本到语音的转换
+   - 使用腾讯云语音服务进行语音合成：https://cloud.tencent.com/document/product/1093/86888
    
 2. **音频会话管理**:
    ```dart
@@ -239,6 +333,67 @@
    - 支持语音音量和语速的个性化设置
    - 结合触觉反馈提供多感官体验
    - 智能调整语音提示的详细程度
+
+### **持续语音监听实现**
+
+1. **技术选型**:
+   - 使用 `porcupine_flutter` 包实现唤醒词检测
+   - 使用 `flutter_sound` 包实现音频录制和活动检测
+   - 使用 `path_provider` 包管理临时文件
+
+2. **唤醒词检测**:
+   ```dart
+   class ContinuousVoiceService {
+     PorcupineManager? _porcupineManager;
+     
+     Future<void> _initializeWakeWordDetection() async {
+       _porcupineManager = await PorcupineManager.fromKeywordPaths(
+         "YOUR_PORCUPINE_ACCESS_KEY",
+         ["assets/wake_words/hey_vista_zh.ppn"], // 唤醒词模型文件路径
+         _onWakeWordDetected,
+         errorCallback: (PorcupineException error) {
+           _logger.severe('唤醒词检测错误: ${error.message}');
+         },
+       );
+       
+       await _porcupineManager?.start();
+     }
+     
+     void _onWakeWordDetected(int keywordIndex) {
+       // 播放提示音
+       final voiceService = _ref.read(voiceCommandProvider);
+       voiceService.speak('我在听');
+       
+       // 开始录音
+       startRecording();
+     }
+   }
+   ```
+
+3. **语音活动检测**:
+   ```dart
+   void _checkSilence() {
+     if (_lastVoiceActivityTime == null || !_recorder.isRecording) return;
+     
+     final now = DateTime.now();
+     final silenceDuration = now.difference(_lastVoiceActivityTime!).inMilliseconds;
+     
+     if (silenceDuration > _silenceThresholdMs) {
+       _logger.info('检测到${_silenceThresholdMs}ms静音，自动停止录音');
+       stopRecording();
+     }
+   }
+   ```
+
+4. **状态管理**:
+   - 使用 Riverpod 的 StateProvider 管理持续监听状态
+   - 提供视觉反馈指示当前状态（空闲/监听中/录音中/处理中）
+   - 支持通过浮动按钮开启/关闭持续监听功能
+
+5. **生命周期管理**:
+   - 应用进入后台时暂停监听
+   - 应用恢复前台时恢复监听
+   - 组件销毁时释放所有资源
 
     
 ## **五、前后端协同设计**
